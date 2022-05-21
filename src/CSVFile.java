@@ -1,15 +1,17 @@
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * Simple class for reading/writing to simple CSV files
  * @author Valentino Solcan
- * @version 2.7
+ * @version 3
  */
 public class CSVFile {
-    private final String filePath;                // Path of file we want to read
-    private final String delimiter;               // Delimiter of the CSV file
-    private ArrayList<String> fileContent;  // ArrayList containing the file content
+    private final String filePath;              // Path of file we want to read
+    private final String delimiter;             // Delimiter of the CSV file
+    private ArrayList<String> fileContent;      // ArrayList containing the file content
+    private final static String REGEX = "(?=([^\"]*\"[^\"]*\")*[^\"]*$)";
 
     /**
      * @param path The path of the CSV file
@@ -56,18 +58,14 @@ public class CSVFile {
 
     /**
      * Formats the String[] values into a CSV line
-     * Example input: "[this],[is],[an],[example]
+     * Example input: "[this],[is],[an],[example]" with delimiter = ";"
      * Example output: "this;is;an;example"
      */
     private String valuesToString(String[] values){
         StringBuilder line = new StringBuilder();
-        for(String value : values){
-            if(value.equals(values[values.length-1])){
-                line.append(value);
-                break;
-            }
+        for(String value : values)
             line.append(value).append(delimiter);
-        }
+        line.deleteCharAt(line.length()-1);
         return line.toString();
     }
 
@@ -99,9 +97,8 @@ public class CSVFile {
      * @return A String containing the value from the line of the CSV file
      */
     public String getValue(int lineIndex, int valueIndex){
-        String[] values = getLine(lineIndex).split(delimiter+"(?=([^\"]*\"[^\"]*\")*[^\"]*$)");
         try{
-            return values[valueIndex];
+            return getLine(lineIndex).split(delimiter+REGEX, -1)[valueIndex];
         }catch(ArrayIndexOutOfBoundsException ex){
             ex.printStackTrace();
         }
@@ -158,12 +155,22 @@ public class CSVFile {
         fileContent.add(valuesToString(values));
         updateFileContent();
     }
+
     /**
      * Appends a line at the end of the CSV file
      * @param line Line that we want to append at the end of the file
      */
     public void append(String line){
         fileContent.add(line);
+        updateFileContent();
+    }
+
+    /**
+     * Appends a line at the end of the CSV file
+     * @param lines Lines that we want to append at the end of the file
+     */
+    public void appendLines(String[] lines){
+        fileContent.addAll(Arrays.asList(lines));
         updateFileContent();
     }
 
@@ -207,7 +214,7 @@ public class CSVFile {
     public void writeValue(String value, int lineIndex, int valueIndex){
         String[] values;
         try {
-            values = fileContent.get(lineIndex).split(delimiter+"(?=([^\"]*\"[^\"]*\")*[^\"]*$)");
+            values = fileContent.get(lineIndex).split(delimiter+REGEX, -1);
         }catch(IndexOutOfBoundsException ex){
             ex.printStackTrace();
             return;
@@ -230,6 +237,27 @@ public class CSVFile {
         fileContent.clear();
         for(String[] values : matrix)
             fileContent.add(valuesToString(values));
+        updateFileContent();
+    }
+
+    /**
+     * Delete a line from the file
+     * @param lineIndex Index of the line to delete
+     */
+    public void deleteLine(int lineIndex){
+        fileContent.remove(lineIndex);
+        updateFileContent();
+    }
+
+    /**
+     * Delete a value from the file
+     * @param lineIndex Index of the line where the value is located
+     * @param valueIndex Index of the value
+     */
+    public void deleteValue(int lineIndex, int valueIndex){
+        String[] values = fileContent.get(lineIndex).split(delimiter+REGEX, -1);
+        values[valueIndex] = "";
+        fileContent.set(lineIndex, valuesToString(values));
         updateFileContent();
     }
 

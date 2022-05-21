@@ -3,8 +3,6 @@ public class TestMain {
 
     // Test the class here
     public static void main(String[] args) {
-        for(String value : sampleCSV.getValues(0)){
-            System.out.println(value);
-        }
+        sampleCSV.deleteValue(2412,8);
     }
 }
